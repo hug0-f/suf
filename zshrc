@@ -44,10 +44,8 @@ plugins=(
   docker-compose
   git
   vim-interaction
-  vscode
   systemd
   ufw
-  kops
   history-substring-search
   autojump
   zsh-autosuggestions
