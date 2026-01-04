@@ -160,8 +160,8 @@ export PYTHONPYCACHEPREFIX="${XDG_CACHE_HOME}/python"
 # ============================================================
 # Editor and pager defaults
 # ============================================================
-export EDITOR="nvim"
-export VISUAL="nvim"
+export EDITOR="vim"
+export VISUAL="vim"
 export PAGER="less"
 export LESS="-FRX"
 
