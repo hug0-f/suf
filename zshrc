@@ -188,63 +188,52 @@ alias cd..='cd ..'
 # cmd-HELPER integration (alias)
 # ============================================================
 
-alias chh='helper --help'
-
-alias ch='helper'
-alias cha='helper --all'
+if command -v helper >/dev/null 2>&1; then
+  alias ch='helper'
+  alias cha='helper --all'
+  alias chh='helper --help'
+fi
 
 # ============================================================
 # LSDU integration (alias)
 # ============================================================
 
-alias lh='lsdu --help
-'
-alias ls='lsdu'
-alias l='lsdu'
-alias ll='lsdu'
-alias la='lsdu -a'
-alias lla='lsdu -a'
-
-alias lst='lsdu --tree'
-
-alias lt='lsdu --sort time --reverse'         
-alias ltr='lsdu --sort time'                  
-
-alias lsS='lsdu --sort size --reverse'        
-alias lss='lsdu --sort size'                   
-
-alias le='lsdu --sort ext'                     
-alias lr='lsdu --reverse'                     
-
-alias lsd='lsdu --only-dirs'
-alias lsf='lsdu --only-files'
-alias lsda='lsdu -a --only-dirs'
-alias lsfa='lsdu -a --only-files'
-
-alias tree='lsdu --tree --level 3'
-alias treea='lsdu -a --tree --level 3'
-
-alias lg='lsdu --grid --columns 4'
-alias lga='lsdu -a --grid --columns 4'
-
-alias li='lsdu --interactive'
-alias lia='lsdu -a --interactive'
-
-alias lsr='lsdu --filter "*.rs"'
-alias lspy='lsdu --filter "*.py"'
-alias lsdot='lsdu --filter ".*"'
-
-alias lsbig='lsdu --min-size 100M'
-alias lssmall='lsdu --max-size 100K'
-
-alias lsg='lsdu --git'
-alias lsgS='lsdu --git --sort size --reverse'
-alias lsgt='lsdu --git --sort time --reverse'
-
-alias du='lsdu --bytes'
-alias du1='lsdu --bytes --max-depth 1'
-alias duh='lsdu --max-depth 1'
-alias dud='lsdu --only-dirs --max-depth 1'
+if command -v lsdu >/dev/null 2>&1; then
+  alias ls='lsdu'
+  alias l='lsdu'
+  alias ll='lsdu'
+  alias la='lsdu -a'
+  alias lla='lsdu -a'
+  alias lst='lsdu --tree'
+  alias lt='lsdu --sort time --reverse'
+  alias ltr='lsdu --sort time'
+  alias lsS='lsdu --sort size --reverse'
+  alias lss='lsdu --sort size'
+  alias le='lsdu --sort ext'
+  alias lr='lsdu --reverse'
+  alias lsd='lsdu --only-dirs'
+  alias lsf='lsdu --only-files'
+  alias lsda='lsdu -a --only-dirs'
+  alias lsfa='lsdu -a --only-files'
+  alias tree='lsdu --tree --level 3'
+  alias treea='lsdu -a --tree --level 3'
+  alias lg='lsdu --grid --columns 4'
+  alias lga='lsdu -a --grid --columns 4'
+  alias li='lsdu --interactive'
+  alias lia='lsdu -a --interactive'
+  alias lsr='lsdu --filter "*.rs"'
+  alias lspy='lsdu --filter "*.py"'
+  alias lsdot='lsdu --filter ".*"'
+  alias lsbig='lsdu --min-size 100M'
+  alias lssmall='lsdu --max-size 100K'
+  alias lsg='lsdu --git'
+  alias lsgS='lsdu --git --sort size --reverse'
+  alias lsgt='lsdu --git --sort time --reverse'
+  alias du='lsdu --bytes'
+  alias du1='lsdu --bytes --max-depth 1'
+  alias duh='lsdu --max-depth 1'
+  alias dud='lsdu --only-dirs --max-depth 1'
+fi
 
 # ============================================================
 # SSH shortcuts
