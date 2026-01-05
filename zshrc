@@ -172,7 +172,7 @@ setopt PUSHD_IGNORE_DUPS
 setopt PUSHD_SILENT
 
 # ============================================================
-# CD Alias
+# Alias
 # ============================================================
 
 alias ..='cd ..'
@@ -181,6 +181,8 @@ alias ....='cd ../../..'
 alias .....='cd ../../../..'
 alias -- -='cd -'
 alias cd..='cd ..'
+
+alias ff='fastfetch'
 
 # ============================================================
 # cmd-HELPER integration (alias)
