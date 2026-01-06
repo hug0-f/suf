@@ -1,27 +1,53 @@
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
   "modules": [
+
     "title",
     "separator",
+
     "os",
     "host",
     "kernel",
+    "bios",
     "uptime",
-    "packages",
-    "shell",
-    "display",
+    "datetime",
+    "locale",
     "de",
-    "wm",
-    "terminal",
+
+    "separator",
+
     "cpu",
+    "cpuusage",
     "gpu",
     "memory",
+    "physicalmemory",
     "swap",
-    "disk",
-    "localip",
+    "monitor",
+    "brightness",
     "battery",
     "poweradapter",
-    "locale",
-    "break"
+    "processes",
+
+    "separator",
+
+    "disk",
+    "physicaldisk",
+    "btrfs",
+    "zpool",
+    "packages",
+    
+    "separator",
+
+    "wifi",
+    "localip",
+    "publicip",
+    "dns",
+    "bluetooth",
+    "bluetoothradio",
+
+    "separator",
+
+    "weather"
   ]
 }
+
