@@ -182,7 +182,7 @@ alias .....='cd ../../../..'
 alias -- -='cd -'
 alias cd..='cd ..'
 
-alias ff='fastfetch'
+alias ff='clear && fastfetch'
 
 # ============================================================
 # cmd-HELPER integration (alias)
