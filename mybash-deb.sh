@@ -138,7 +138,7 @@ is_gui_installed() {
 fastfetch --gen-config
 mkdir -p "$HOME/.dev/config/fastfetch/"
 cp "$SUF_DIR/fastfetch.config.jsonc" "$HOME/.dev/config/fastfetch/config.jsonc"
-rm -rf "$HOME/fastfetch/config.jsonc"
+rm -rf "$HOME/fastfetch/"
 
 # --- Configure zsh ---
 cp "$SUF_DIR/zshrc" "$HOME/.zshrc"
