@@ -57,6 +57,9 @@ fi
 # Clone single-use files repository
 # ============================================================
 SUF_DIR="$HOME/suf"
+
+rm -rf "$SUF_DIR"
+
 if [ -d "$SUF_DIR/.git" ]; then
   git -C "$SUF_DIR" fetch --all
   git -C "$SUF_DIR" reset --hard origin/master
@@ -98,20 +101,28 @@ if [[ "$ARCH" == "x86_64" ]]; then
 fi
 
 # ============================================================
-# Vim configuration (amix)
+# Vim configuration 
 # ============================================================
-VIM_RUNTIME="$DEV_HOME/vim_runtime"
+VIM_RUNTIME="$HOME/.vim_runtime"
+
 if [ -d "$VIM_RUNTIME/.git" ]; then
   git -C "$VIM_RUNTIME" fetch --all
-  git -C "$VIM_RUNTIME" reset --hard origin/master
+  git -C "$VIM_RUNTIME" reset --hard origin/main
 else
   rm -rf "$VIM_RUNTIME"
   git clone --depth=1 https://github.com/amix/vimrc.git "$VIM_RUNTIME"
 fi
+
+VIMRC_TARGET="$HOME/.vimrc"
+if [ -f "$VIMRC_TARGET" ] || [ -L "$VIMRC_TARGET" ]; then
+    rm -f "$VIMRC_TARGET"
+fi
+
+ln -s "$VIM_RUNTIME/vimrc" "$VIMRC_TARGET"
 sh "$VIM_RUNTIME/install_awesome_vimrc.sh"
 
 # ============================================================
-# Oh My Zsh installation (XDG aligned)
+# Oh My Zsh installation
 # ============================================================
 OH_MY_ZSH_DIR="$DEV_HOME/oh-my-zsh"
 
