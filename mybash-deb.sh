@@ -1,167 +1,235 @@
 #!/bin/bash
 
 set -euo pipefail
-ARCH=$(uname -m)
 
-# --- Remove old configuration files ---
-rm -f "$HOME/.vimrc" || true
-rm -f "$HOME/.zshrc" || true
-rm -rf "$HOME/.vim" "$HOME/.vim_runtime" "$HOME/.oh-my-zsh" || true
+# ============================================================
+# Global variables
+# ============================================================
+ARCH="$(uname -m)"
 
-# --- Create XDG directories ---
-mkdir -p "$HOME/.dev/cache" "$HOME/.dev/config" "$HOME/.dev/share" "$HOME/.cache"
+export DEV_HOME="$HOME/.dev"
+export XDG_CACHE_HOME="$DEV_HOME/cache"
+export XDG_CONFIG_HOME="$DEV_HOME/config"
+export XDG_DATA_HOME="$DEV_HOME/share"
 
-# --- System update ---
-sudo apt update && sudo apt full-upgrade -y && sudo apt autoremove --purge -y
+# Keep sudo alive
+sudo -v
 
-# --- Install packages ---
-APT_PACKAGES=(curl git vim zsh wget unzip ca-certificates build-essential autojump net-tools dnsutils ufw vivid python3-pygments command-not-found fastfetch)
+# ============================================================
+# Create base XDG directory layout
+# ============================================================
+mkdir -p \
+  "$XDG_CACHE_HOME" \
+  "$XDG_CONFIG_HOME" \
+  "$XDG_DATA_HOME"
+
+mkdir -p \
+  "$XDG_CACHE_HOME"/{zsh,npm,pip,python,docker} \
+  "$XDG_CONFIG_HOME"/{zsh,npm,docker,fastfetch} \
+  "$XDG_DATA_HOME"/{zsh,cargo,rustup,go,fonts,gnupg}
+
+# ============================================================
+# System update
+# ============================================================
+sudo apt update
+sudo apt full-upgrade -y
+sudo apt autoremove --purge -y
+
+# ============================================================
+# Install base packages
+# ============================================================
+APT_PACKAGES=(
+  curl git vim zsh wget unzip ca-certificates
+  build-essential autojump net-tools dnsutils ufw
+  vivid python3-pygments command-not-found fastfetch
+)
+
 sudo apt install -y "${APT_PACKAGES[@]}"
 
+# ============================================================
+# LS_COLORS generation (XDG compliant)
+# ============================================================
 if command -v vivid >/dev/null 2>&1; then
-  vivid generate one-dark > "$HOME/.ls_colors"
+  vivid generate one-dark > "$XDG_CONFIG_HOME/ls_colors"
 fi
 
-# --- Add single-use file ---
+# ============================================================
+# Clone single-use files repository
+# ============================================================
 SUF_DIR="$HOME/suf"
 if [ -d "$SUF_DIR/.git" ]; then
-  git -C "$SUF_DIR" pull --ff-only || true
+  git -C "$SUF_DIR" fetch --all
+  git -C "$SUF_DIR" reset --hard origin/master
 else
   rm -rf "$SUF_DIR"
   git clone https://github.com/hug0-f/suf.git "$SUF_DIR"
 fi
 
-# --- Install Docker ---
-DOCKER_DIR="$HOME/docker"
+# ============================================================
+# Docker installation (if missing)
+# ============================================================
+if ! command -v docker >/dev/null 2>&1; then
+  DOCKER_TMP="$HOME/docker-install"
+  rm -rf "$DOCKER_TMP"
+  git clone https://github.com/hug0-f/docker-install.git "$DOCKER_TMP"
 
-if command -v docker >/dev/null 2>&1; then
-  echo "Docker already installed ($(docker --version))..."
-else
-  DOCKER_DIR="$HOME/docker"
-
-  if [ -d "$DOCKER_DIR/.git" ]; then
-    git -C "$DOCKER_DIR" pull --ff-only || true
-  else
-    rm -rf "$DOCKER_DIR"
-    git clone https://github.com/hug0-f/docker-install.git "$DOCKER_DIR"
+  if [ -f "$DOCKER_TMP/install-docker.sh" ]; then
+    chmod +x "$DOCKER_TMP/install-docker.sh"
+    "$DOCKER_TMP/install-docker.sh"
   fi
 
-  if [ -f "$DOCKER_DIR/install-docker.sh" ]; then
-    chmod +x "$DOCKER_DIR/install-docker.sh"
-    "$DOCKER_DIR/install-docker.sh"
-  else
-    echo "install-docker.sh not found, skipping Docker installation..."
-  fi
-
-  rm -rf "$DOCKER_DIR"
+  rm -rf "$DOCKER_TMP"
 fi
 
-# --- Install lsdu ---
+# ============================================================
+# Install lsdu
+# ============================================================
 if [[ "$ARCH" == "x86_64" ]]; then
-    sudo apt install -y "$SUF_DIR/lsdu_latest_amd64.deb"
-elif [[ "$ARCH" == "aarch64" ]] || [[ "$ARCH" == "armv7l" ]]; then
-    sudo apt install -y "$SUF_DIR/lsdu_latest_arm64.deb"
-else
-    echo "No version found for: $ARCH"
+  sudo apt install -y "$SUF_DIR/lsdu_latest_amd64.deb"
+elif [[ "$ARCH" == "aarch64" || "$ARCH" == "armv7l" ]]; then
+  sudo apt install -y "$SUF_DIR/lsdu_latest_arm64.deb"
 fi
 
-# --- Install helper ---
+# ============================================================
+# Install helper
+# ============================================================
 if [[ "$ARCH" == "x86_64" ]]; then
-    sudo apt install -y "$SUF_DIR/helper_latest_amd64.deb"
-else
-    echo "No version found for : $ARCH"
+  sudo apt install -y "$SUF_DIR/helper_latest_amd64.deb"
 fi
 
-# --- Install Vim ---
-if [ -d "$HOME/.vim_runtime/.git" ]; then
-  git -C "$HOME/.vim_runtime" pull --ff-only || true
+# ============================================================
+# Vim configuration (amix)
+# ============================================================
+VIM_RUNTIME="$DEV_HOME/vim_runtime"
+if [ -d "$VIM_RUNTIME/.git" ]; then
+  git -C "$VIM_RUNTIME" fetch --all
+  git -C "$VIM_RUNTIME" reset --hard origin/master
 else
-  rm -rf "$HOME/.vim_runtime"
-  git clone --depth=1 https://github.com/amix/vimrc.git "$HOME/.vim_runtime"
+  rm -rf "$VIM_RUNTIME"
+  git clone --depth=1 https://github.com/amix/vimrc.git "$VIM_RUNTIME"
 fi
-sh "$HOME/.vim_runtime/install_awesome_vimrc.sh"
+sh "$VIM_RUNTIME/install_awesome_vimrc.sh"
 
-# --- Install Oh My Zsh ---
-OH_MY_ZSH_DIR="$HOME/.oh-my-zsh"
+# ============================================================
+# Oh My Zsh installation (XDG aligned)
+# ============================================================
+OH_MY_ZSH_DIR="$DEV_HOME/oh-my-zsh"
+
 if [ ! -d "$OH_MY_ZSH_DIR" ]; then
-    RUNZSH=no CHSH=no sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  RUNZSH=no CHSH=no sh -c \
+    "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+  if [ -d "$HOME/.oh-my-zsh" ]; then
+    rsync -a "$HOME/.oh-my-zsh/" "$OH_MY_ZSH_DIR/"
+    rm -rf "$HOME/.oh-my-zsh"
+  fi
 else
-    echo "Oh My Zsh already installed, upgrade..."
-    git -C "$OH_MY_ZSH_DIR" pull --ff-only || true
+  if command -v omz >/dev/null 2>&1; then
+    omz update || true
+  fi
 fi
 
-# --- Install fonts and Powerlevel10k ---
-FONTS_DIR="$HOME/.local/share/fonts"
-mkdir -p "$FONTS_DIR" || true
+ZSH_CUSTOM="$OH_MY_ZSH_DIR/custom"
 
-curl -fsSL -o "$FONTS_DIR/MesloLGS NF Regular.ttf" https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Regular.ttf
-curl -fsSL -o "$FONTS_DIR/MesloLGS NF Bold.ttf" https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold.ttf
-curl -fsSL -o "$FONTS_DIR/MesloLGS NF Italic.ttf" https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Italic.ttf
-curl -fsSL -o "$FONTS_DIR/MesloLGS NF Bold Italic.ttf" https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20Bold%20Italic.ttf
-
-if command -v fc-cache &>/dev/null; then
-    fc-cache -f "$FONTS_DIR" || true
-fi
-
-# --- Install Powerlevel10k ---
-POWERLEVEL10K_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k"
-if [[ ! -d "$POWERLEVEL10K_DIR" ]]; then
-    git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$POWERLEVEL10K_DIR"
-fi
-
-# --- Install zsh-autosuggestions ---
-ZSH_AUTOSUGGESTIONS_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-autosuggestions"
-if [ -d "$ZSH_AUTOSUGGESTIONS_DIR/.git" ]; then
-    git -C "$ZSH_AUTOSUGGESTIONS_DIR" pull --ff-only || true
+# ============================================================
+# Powerlevel10k theme
+# ============================================================
+P10K_DIR="$ZSH_CUSTOM/themes/powerlevel10k"
+if [ -d "$P10K_DIR/.git" ]; then
+  git -C "$P10K_DIR" fetch --all
+  git -C "$P10K_DIR" reset --hard origin/master
 else
-    git clone https://github.com/zsh-users/zsh-autosuggestions "$ZSH_AUTOSUGGESTIONS_DIR"
+  rm -rf "$P10K_DIR"
+  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git "$P10K_DIR"
 fi
 
-# --- Install zsh-syntax-highlighting ---
-ZSH_SYNTAX_HIGHLIGHTING_DIR="${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting"
-if [ -d "$ZSH_SYNTAX_HIGHLIGHTING_DIR/.git" ]; then
-    git -C "$ZSH_SYNTAX_HIGHLIGHTING_DIR" pull --ff-only || true
-else
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "$ZSH_SYNTAX_HIGHLIGHTING_DIR"
+# ============================================================
+# Zsh plugins
+# ============================================================
+for repo in \
+  zsh-users/zsh-autosuggestions \
+  zsh-users/zsh-syntax-highlighting
+do
+  name="${repo##*/}"
+  target="$ZSH_CUSTOM/plugins/$name"
+
+  if [ -d "$target/.git" ]; then
+    git -C "$target" fetch --all
+    git -C "$target" reset --hard origin/master
+  else
+    rm -rf "$target"
+    git clone "https://github.com/$repo.git" "$target"
+  fi
+done
+
+# ============================================================
+# Fonts (Powerlevel10k)
+# ============================================================
+FONT_DIR="$XDG_DATA_HOME/fonts"
+mkdir -p "$FONT_DIR"
+
+for font in Regular Bold Italic "Bold Italic"; do
+  curl -fsSL -o "$FONT_DIR/MesloLGS NF $font.ttf" \
+    "https://github.com/romkatv/powerlevel10k-media/raw/master/MesloLGS%20NF%20${font// /%20}.ttf"
+done
+
+command -v fc-cache >/dev/null 2>&1 && fc-cache -f "$FONT_DIR" || true
+
+# ============================================================
+# fastfetch configuration
+# ============================================================
+if [ ! -f "$XDG_CONFIG_HOME/fastfetch/config.jsonc" ]; then
+  fastfetch --gen-config
 fi
 
-# --- Check if a GUI is installed ---
-is_gui_installed() {
-    if command -v Xorg &>/dev/null || command -v Xwayland &>/dev/null || command -v gnome-session &>/dev/null || command -v startkde &>/dev/null; then
-        return 0
-    else
-        return 1
-    fi
-}
+cp "$SUF_DIR/fastfetch.config.jsonc" \
+   "$XDG_CONFIG_HOME/fastfetch/config.jsonc"
 
-# --- Configure fastfetch ---
-fastfetch --gen-config
-mkdir -p "$HOME/.dev/config/fastfetch/"
-cp "$SUF_DIR/fastfetch.config.jsonc" "$HOME/.dev/config/fastfetch/config.jsonc"
-rm -rf "$HOME/fastfetch/"
+rm -rf "$HOME/fastfetch"
 
-# --- Configure zsh ---
+# ============================================================
+# Zsh configuration (FORCED, source of truth = SUF)
+# ============================================================
 cp "$SUF_DIR/zshrc" "$HOME/.zshrc"
 
-# --- Configure p10k ---
-if is_gui_installed; then
-    cp "$SUF_DIR/p10k.zsh" "$HOME/.p10k.zsh"
+# ============================================================
+# Powerlevel10k configuration
+# ============================================================
+if command -v Xorg >/dev/null 2>&1 || command -v Xwayland >/dev/null 2>&1; then
+  cp "$SUF_DIR/p10k.zsh" "$HOME/.p10k.zsh"
 else
-    cp "$SUF_DIR/p10k.zsh.noGUI" "$HOME/.p10k.zsh"
+  cp "$SUF_DIR/p10k.zsh.noGUI" "$HOME/.p10k.zsh"
 fi
 
-# --- Remove suf repo ---
+# ============================================================
+# Cleanup legacy files and directories
+# ============================================================
+rm -rf \
+  "$HOME/.oh-my-zsh" \
+  "$HOME/.vim_runtime" \
+  "$HOME/.vim" \
+  "$HOME/.cache/zsh" \
+  "$HOME/.zcompdump"* \
+  "$HOME/.npmrc" \
+  "$HOME/.docker"
+
+# ============================================================
+# Remove SUF repository
+# ============================================================
 rm -rf "$SUF_DIR"
 
-# --- Change the default shell ---
+# ============================================================
+# Set default shell
+# ============================================================
 TARGET_SHELL="$(command -v zsh)"
-CURRENT_SHELL="$(getent passwd "$USER" | cut -d: -f7 || echo "")"
+CURRENT_SHELL="$(getent passwd "$USER" | cut -d: -f7 || true)"
+
 if [ -n "$TARGET_SHELL" ] && [ "$CURRENT_SHELL" != "$TARGET_SHELL" ]; then
-    echo "Configuring the default shell using zsh..."
-    chsh -s "$TARGET_SHELL" || echo "Failure, script continue..."
+  chsh -s "$TARGET_SHELL" || true
 fi
 
-# --- End ---
-rm -rf mybash-deb.sh
+# ============================================================
+# End
+# ============================================================
 echo ""
-echo "Install complete, reboot asap..."
+echo "Install complete. Reboot recommended."
