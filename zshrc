@@ -185,7 +185,27 @@ alias .....='cd ../../../..'
 alias -- -='cd -'
 alias cd..='cd ..'
 
+rm() {
+    TRASH='$HOME/.trash'
+    mkdir -p '$TRASH'
+
+    DATE=$(date +%Y-%m-%d_%H-%M-%S)
+
+    for arg in '$@'; do
+        if [[ '$arg' == -* ]]; then
+            continue
+        fi
+
+        if [ -e '$arg' ]; then
+            mv '$arg' '$TRASH/${DATE}_$(basename '$arg')'
+        fi
+    done
+}
+alias emptytrash='\rm -rf ~/.trash/*'
+alias rmtrash='\rm -rf ~/.trash'
+
 alias ff='clear && fastfetch'
+alias c='clear'
 
 # ============================================================
 # helper integration
