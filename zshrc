@@ -185,24 +185,47 @@ alias .....='cd ../../../..'
 alias -- -='cd -'
 alias cd..='cd ..'
 
+export TRASH="$HOME/.trash"
 rm() {
-    TRASH='$HOME/.trash'
-    mkdir -p '$TRASH'
+    mkdir -p "$TRASH"
 
+    local DATE
     DATE=$(date +%Y-%m-%d_%H-%M-%S)
 
-    for arg in '$@'; do
-        if [[ '$arg' == -* ]]; then
+    for arg in "$@"; do
+        # Si option -> vrai rm
+        if [[ "$arg" == -* ]]; then
+            command rm "$@"
+            return
+        fi
+
+        if [[ ! -e "$arg" ]]; then
+            printf 'rm: cannot remove "%s": No such file or directory\n' "$arg" >&2
             continue
         fi
 
-        if [ -e '$arg' ]; then
-            mv '$arg' '$TRASH/${DATE}_$(basename '$arg')'
-        fi
+        local abs_path
+        abs_path="$(realpath "$arg")"
+
+        local rel_dir
+        rel_dir="$(dirname "${abs_path#$HOME/}")"
+
+        local dest_dir="$TRASH/$rel_dir"
+        mkdir -p "$dest_dir"
+
+        mv -- "$arg" "$dest_dir/${DATE}_$$-$(basename "$arg")"
     done
 }
-alias emptytrash='\rm -rf ~/.trash/*'
-alias rmtrash='\rm -rf ~/.trash'
+emptytrash() {
+    read "?Empty trash ($TRASH)? [y/N] " ans
+    [[ "$ans" == [yY] ]] || return
+    command rm -rf -- "$TRASH"/*
+}
+rmtrash() {
+    command rm -rf -- "$TRASH"
+    echo "Trash removed: $TRASH"
+}
+alias rrm='/bin/rm'
 
 alias ff='clear && fastfetch'
 alias c='clear'
